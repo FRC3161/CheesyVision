@@ -11,10 +11,34 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.ServerSocketConnection;
 import javax.microedition.io.SocketConnection;
 
-public class CheesyVisionServer implements Runnable {
+public class CheesyVisionServer {
+
+    private class ServerTask implements Runnable {
+        // This method listens for incoming connections and spawns new
+        // VisionServerConnectionHandlers to handle them
+        public void run() {
+            try {
+                ServerSocketConnection s = (ServerSocketConnection) Connector.open("serversocket://:" + listenPort_);
+                while (listening_) {
+                    SocketConnection connection = (SocketConnection) s.acceptAndOpen();
+                    Thread t = new Thread(new CheesyVisionServer.VisionServerConnectionHandler(connection));
+                    t.start();
+                    connections_.addElement(connection);
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        System.out.println("Thread sleep failed.");
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("Socket failure.");
+                e.printStackTrace();
+            }
+        }
+    }
 
     private static CheesyVisionServer instance_;
-    Thread serverThread = new Thread(this);
+    Thread serverThread = new Thread(new ServerTask());
     private int listenPort_;
     private Vector connections_;
     private boolean counting_ = false;
@@ -142,30 +166,6 @@ public class CheesyVisionServer implements Runnable {
 
             } catch (IOException e) {
             }
-        }
-    }
-
-  // run() to implement Runnable
-    // This method listens for incoming connections and spawns new
-    // VisionServerConnectionHandlers to handle them
-    public void run() {
-        ServerSocketConnection s = null;
-        try {
-            s = (ServerSocketConnection) Connector.open("serversocket://:" + listenPort_);
-            while (listening_) {
-                SocketConnection connection = (SocketConnection) s.acceptAndOpen();
-                Thread t = new Thread(new CheesyVisionServer.VisionServerConnectionHandler(connection));
-                t.start();
-                connections_.addElement(connection);
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    System.out.println("Thread sleep failed.");
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("Socket failure.");
-            e.printStackTrace();
         }
     }
 }
