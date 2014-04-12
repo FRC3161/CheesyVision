@@ -14,44 +14,45 @@ import javax.microedition.io.SocketConnection;
 public class CheesyVisionServer {
 
     private class ServerTask implements Runnable {
+
         // This method listens for incoming connections and spawns new
         // VisionServerConnectionHandlers to handle them
         public void run() {
             try {
-                ServerSocketConnection s = (ServerSocketConnection) Connector.open("serversocket://:" + listenPort_);
-                while (listening_) {
-                    SocketConnection connection = (SocketConnection) s.acceptAndOpen();
-                    Thread t = new Thread(new CheesyVisionServer.VisionServerConnectionHandler(connection));
+                final ServerSocketConnection s = (ServerSocketConnection) Connector.open("serversocket://:" + port);
+                while (listening) {
+                    final SocketConnection connection = (SocketConnection) s.acceptAndOpen(); // blocks until a connection is made
+                    final Thread t = new Thread(new VisionServerConnectionHandler(connection));
                     t.start();
-                    connections_.addElement(connection);
+                    connections.addElement(connection);
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException ex) {
                         System.out.println("Thread sleep failed.");
                     }
                 }
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 System.out.println("Socket failure.");
                 e.printStackTrace();
             }
         }
     }
 
-    private static CheesyVisionServer instance_;
-    Thread serverThread = new Thread(new ServerTask());
-    private int listenPort_;
-    private Vector connections_;
-    private boolean counting_ = false;
-    private int leftCount_ = 0, rightCount_ = 0, totalCount_ = 0;
-    private boolean curLeftStatus_ = false, curRightStatus_ = false;
-    double lastHeartbeatTime_ = -1;
-    private boolean listening_ = true;
+    private static CheesyVisionServer INSTANCE;
+    private final Thread serverThread = new Thread(new ServerTask());
+    private final int port;
+    private final Vector connections = new Vector();
+    private boolean counting = false;
+    private int leftCount = 0, rightCount = 0, totalCount = 0;
+    private boolean curLeftStatus = false, curRightStatus = false;
+    private double lastHeartbeatTime = -1.0d;
+    private boolean listening = true;
 
-    public static CheesyVisionServer getInstance() {
-        if (instance_ == null) {
-            instance_ = new CheesyVisionServer();
+    public static CheesyVisionServer getInstance(final int port) {
+        if (INSTANCE == null) {
+            INSTANCE = new CheesyVisionServer(port);
         }
-        return instance_;
+        return INSTANCE;
     }
 
     public void start() {
@@ -59,7 +60,7 @@ public class CheesyVisionServer {
     }
 
     public void stop() {
-        listening_ = false;
+        listening = false;
     }
 
     private CheesyVisionServer() {
@@ -67,57 +68,52 @@ public class CheesyVisionServer {
     }
 
     private CheesyVisionServer(int port) {
-        listenPort_ = port;
-        connections_ = new Vector();
+        this.port = port;
     }
 
     public boolean hasClientConnection() {
-        return lastHeartbeatTime_ > 0 && (Timer.getFPGATimestamp() - lastHeartbeatTime_) < 3.0;
-    }
-
-    public void setPort(int port) {
-        listenPort_ = port;
+        return lastHeartbeatTime > 0 && (Timer.getFPGATimestamp() - lastHeartbeatTime) < 3.0;
     }
 
     private void updateCounts(boolean left, boolean right) {
-        if (counting_) {
-            leftCount_ += left ? 1 : 0;
-            rightCount_ += right ? 1 : 0;
-            totalCount_++;
+        if (counting) {
+            leftCount += left ? 1 : 0;
+            rightCount += right ? 1 : 0;
+            totalCount++;
         }
     }
 
     public void startSamplingCounts() {
-        counting_ = true;
+        counting = true;
     }
 
     public void stopSamplingCounts() {
-        counting_ = false;
+        counting = false;
     }
 
     public void reset() {
-        leftCount_ = rightCount_ = totalCount_ = 0;
-        curLeftStatus_ = curRightStatus_ = false;
+        leftCount = rightCount = totalCount = 0;
+        curLeftStatus = curRightStatus = false;
     }
 
     public int getLeftCount() {
-        return leftCount_;
+        return leftCount;
     }
 
     public int getRightCount() {
-        return rightCount_;
+        return rightCount;
     }
 
     public int getTotalCount() {
-        return totalCount_;
+        return totalCount;
     }
 
     public boolean getLeftStatus() {
-        return curLeftStatus_;
+        return curLeftStatus;
     }
 
     public boolean getRightStatus() {
-        return curRightStatus_;
+        return curRightStatus;
     }
 
     // This class handles incoming TCP connections
@@ -137,7 +133,7 @@ public class CheesyVisionServer {
                 byte[] b = new byte[1024];
                 double timeout = 10.0;
                 double lastHeartbeat = Timer.getFPGATimestamp();
-                CheesyVisionServer.this.lastHeartbeatTime_ = lastHeartbeat;
+                CheesyVisionServer.this.lastHeartbeatTime = lastHeartbeat;
                 while (Timer.getFPGATimestamp() < lastHeartbeat + timeout) {
                     boolean gotData = false;
                     while (is.available() > 0) {
@@ -147,12 +143,12 @@ public class CheesyVisionServer {
                             byte reading = b[i];
                             boolean leftStatus = (reading & (1 << 1)) > 0;
                             boolean rightStatus = (reading & (1 << 0)) > 0;
-                            CheesyVisionServer.this.curLeftStatus_ = leftStatus;
-                            CheesyVisionServer.this.curRightStatus_ = rightStatus;
+                            CheesyVisionServer.this.curLeftStatus = leftStatus;
+                            CheesyVisionServer.this.curRightStatus = rightStatus;
                             CheesyVisionServer.this.updateCounts(leftStatus, rightStatus);
                         }
                         lastHeartbeat = Timer.getFPGATimestamp();
-                        CheesyVisionServer.this.lastHeartbeatTime_ = lastHeartbeat;
+                        CheesyVisionServer.this.lastHeartbeatTime = lastHeartbeat;
                     }
 
                     try {
