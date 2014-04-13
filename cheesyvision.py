@@ -101,7 +101,7 @@ BOX_BORDER = 3
 CONNECTED_BORDER = 15
 
 # This is the rate at which we will send updates to the cRIO.
-UPDATE_RATE_HZ = 40.0
+UPDATE_RATE_HZ = 20.0
 PERIOD = (1.0 / UPDATE_RATE_HZ) * 1000.0
 
 def get_time_millis():
@@ -188,6 +188,11 @@ def main():
     s = None
 
     while 1:
+        # Throttle the output
+        cur_time = get_time_millis()
+        if not last_t + PERIOD <= cur_time:
+            continue
+
         # Get a new frame.
         _, img = capture.read()
 
@@ -215,36 +220,33 @@ def main():
         if right_on:
             color_far(bg, ((WIDTH_PX+WEBCAM_WIDTH_PX)/2+B, B), (WIDTH_PX-B, WEBCAM_HEIGHT_PX-B))
 
-        # Throttle the output
-        cur_time = get_time_millis()
-        if last_t + PERIOD <= cur_time:
-            # Try to connect to the robot on open or disconnect
-            if not connected:
-                try:
-                    # Open a socket with the cRIO so that we can send the state of the hot goal.
-                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-                    # This is a pretty aggressive timeout...we want to reconnect automatically
-                    # if we are disconnected.
-                    s.settimeout(.1)
-                    s.connect((HOST, PORT))
-                except:
-                    print "failed to reconnect"
-                    last_t = cur_time + 1000
+        # Try to connect to the robot on open or disconnect
+        if not connected:
             try:
-                # Send one byte to the cRIO:
-                # 0x01: Right on
-                # 0x02: Left on
-                # 0x03: Both on
-                write_bytes = bytearray()
-                v = (left_on << 1) | (right_on << 0)
-                write_bytes.append(v)
-                s.send(write_bytes)
-                last_t = cur_time
-                connected = True
+                # Open a socket with the cRIO so that we can send the state of the hot goal.
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+                # This is a pretty aggressive timeout...we want to reconnect automatically
+                # if we are disconnected.
+                s.settimeout(.1)
+                s.connect((HOST, PORT))
             except:
-                print "Could not send data to robot"
-                connected = False
+                print "failed to reconnect"
+                last_t = cur_time + 1000
+        try:
+            # Send one byte to the cRIO:
+            # 0x01: Right on
+            # 0x02: Left on
+            # 0x03: Both on
+            write_bytes = bytearray()
+            v = (left_on << 1) | (right_on << 0)
+            write_bytes.append(v)
+            s.send(write_bytes)
+            last_t = cur_time
+            connected = True
+        except:
+            print "Could not send data to robot"
+            connected = False
 
         # Show the image.
         cv.imshow(WINDOW_NAME, bg)
