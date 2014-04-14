@@ -50,11 +50,17 @@ public class CheesyVisionServer {
     }
 
     private void updateCounts(final boolean left, final boolean right) {
-        if (counting) {
-            leftCount += left ? 1 : 0;
-            rightCount += right ? 1 : 0;
-            totalCount++;
+        if (!counting) {
+            return;
         }
+        
+        if (left) {
+            ++leftCount;
+        }
+        if (right) {
+            ++rightCount;
+        }
+        ++totalCount;
     }
 
     public void startSamplingCounts() {
@@ -68,7 +74,8 @@ public class CheesyVisionServer {
     public void reset() {
         leftCount = 0;
         rightCount = 0;
-        curLeftStatus = curRightStatus = false;
+        curLeftStatus = false;
+        curRightStatus = false;
     }
 
     public int getLeftCount() {
