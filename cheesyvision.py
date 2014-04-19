@@ -100,7 +100,7 @@ LEFT_LR = (int(LEFT_UL[0] + RECT_WIDTH), int(LEFT_UL[1] + RECT_HEIGHT))
 
 # The location of the right rectangle.
 RIGHT_UL = (int(WEBCAM_WIDTH_PX - (2 * WEBCAM_HEIGHT_PX / 3) + X_OFFSET), int(LEFT_UL[1]))
-RIGHT_LR = (int(RIGHT_UL[0] + RECT_WIDTH), int(RECT_UL[1] + RECT_HEIGHT))
+RIGHT_LR = (int(RIGHT_UL[0] + RECT_WIDTH), int(RIGHT_UL[1] + RECT_HEIGHT))
 
 # Constants for drawing.
 BOX_BORDER = 3
