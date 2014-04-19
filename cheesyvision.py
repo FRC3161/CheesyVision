@@ -78,8 +78,8 @@ WINDOW_NAME = "CheesyVision"
 WIDTH_PX = 1000
 
 # Dimensions of the webcam image (it will be resized to this size)
-WEBCAM_WIDTH_PX = 640 # default 640
-WEBCAM_HEIGHT_PX = 360 # default 360
+WEBCAM_WIDTH_PX = 427 # default 640
+WEBCAM_HEIGHT_PX = 240 # default 360
 
 # The number of columns from the left of the widget where the image starts.
 X_OFFSET = int((WIDTH_PX - WEBCAM_WIDTH_PX)/2)
