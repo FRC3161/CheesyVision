@@ -191,6 +191,7 @@ def main():
         # Throttle the output
         cur_time = get_time_millis()
         if last_t + PERIOD > cur_time:
+            time.sleep(0.0125)
             continue
 
         # Get a new frame.
