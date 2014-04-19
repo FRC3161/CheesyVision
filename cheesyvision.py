@@ -203,6 +203,9 @@ def main():
         # Render the image onto our canvas.
         bg = draw_static(small_img, connected)
 
+        # Show the image.
+        cv.imshow(WINDOW_NAME, bg)
+
         if connected:
             # Get the average color of each of the three boxes.
             cal, left, right = detect_colors(cv.cvtColor(bg, cv.COLOR_BGR2HSV))
@@ -222,6 +225,20 @@ def main():
             if right_on:
                 color_far(bg, ((WIDTH_PX+WEBCAM_WIDTH_PX)/2+B, B), (WIDTH_PX-B, WEBCAM_HEIGHT_PX-B))
 
+            try:
+                # Send one byte to the cRIO:
+                # 0x01: Right on
+                # 0x02: Left on
+                # 0x03: Both on
+                write_bytes = bytearray()
+                v = (left_on << 1) | (right_on << 0)
+                write_bytes.append(v)
+                s.send(write_bytes)
+                last_t = cur_time
+            except:
+                print "Could not send data to robot"
+                connected = False
+
         # Try to connect to the robot on open or disconnect
         else:
             try:
@@ -230,30 +247,13 @@ def main():
 
                 # This is a pretty aggressive timeout...we want to reconnect automatically
                 # if we are disconnected.
-                s.settimeout(.1)
+                s.settimeout(0.5)
                 s.connect((HOST, PORT))
                 connected = True
             except:
                 print "failed to reconnect"
                 last_t = cur_time + 1000
                 connected = False
-        try:
-            # Send one byte to the cRIO:
-            # 0x01: Right on
-            # 0x02: Left on
-            # 0x03: Both on
-            write_bytes = bytearray()
-            v = (left_on << 1) | (right_on << 0)
-            write_bytes.append(v)
-            s.send(write_bytes)
-            last_t = cur_time
-            connected = True
-        except:
-            print "Could not send data to robot"
-            connected = False
-
-        # Show the image.
-        cv.imshow(WINDOW_NAME, bg)
 
         # Capture a keypress.
         key = cv.waitKey(10) & 255
