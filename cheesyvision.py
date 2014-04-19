@@ -190,7 +190,7 @@ def main():
     while 1:
         # Throttle the output
         cur_time = get_time_millis()
-        if not last_t + PERIOD <= cur_time:
+        if last_t + PERIOD > cur_time:
             continue
 
         # Get a new frame.
@@ -202,23 +202,24 @@ def main():
         # Render the image onto our canvas.
         bg = draw_static(small_img, connected)
 
-        # Get the average color of each of the three boxes.
-        cal, left, right = detect_colors(cv.cvtColor(bg, cv.COLOR_BGR2HSV))
+        if connected:
+            # Get the average color of each of the three boxes.
+            cal, left, right = detect_colors(cv.cvtColor(bg, cv.COLOR_BGR2HSV))
 
-        # Get the difference between the left and right boxes vs. calibration.
-        left_dist = color_distance(left, cal)
-        right_dist = color_distance(right, cal)
+            # Get the difference between the left and right boxes vs. calibration.
+            left_dist = color_distance(left, cal)
+            right_dist = color_distance(right, cal)
 
-        # Check the difference.
-        left_on = left_dist < max_color_distance
-        right_on = right_dist < max_color_distance
+            # Check the difference.
+            left_on = left_dist < max_color_distance
+            right_on = right_dist < max_color_distance
 
-        # If we detect a hot goal, color that side of the widget.
-        B = CONNECTED_BORDER-5
-        if left_on:
-            color_far(bg, (B, B), ((WIDTH_PX-WEBCAM_WIDTH_PX)/2-B, WEBCAM_HEIGHT_PX-B))
-        if right_on:
-            color_far(bg, ((WIDTH_PX+WEBCAM_WIDTH_PX)/2+B, B), (WIDTH_PX-B, WEBCAM_HEIGHT_PX-B))
+            # If we detect a hot goal, color that side of the widget.
+            B = CONNECTED_BORDER-5
+            if left_on:
+                color_far(bg, (B, B), ((WIDTH_PX-WEBCAM_WIDTH_PX)/2-B, WEBCAM_HEIGHT_PX-B))
+            if right_on:
+                color_far(bg, ((WIDTH_PX+WEBCAM_WIDTH_PX)/2+B, B), (WIDTH_PX-B, WEBCAM_HEIGHT_PX-B))
 
         # Try to connect to the robot on open or disconnect
         if not connected:
