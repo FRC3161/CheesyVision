@@ -223,7 +223,7 @@ def main():
                 color_far(bg, ((WIDTH_PX+WEBCAM_WIDTH_PX)/2+B, B), (WIDTH_PX-B, WEBCAM_HEIGHT_PX-B))
 
         # Try to connect to the robot on open or disconnect
-        if not connected:
+        else:
             try:
                 # Open a socket with the cRIO so that we can send the state of the hot goal.
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -232,9 +232,11 @@ def main():
                 # if we are disconnected.
                 s.settimeout(.1)
                 s.connect((HOST, PORT))
+                connected = True
             except:
                 print "failed to reconnect"
                 last_t = cur_time + 1000
+                connected = False
         try:
             # Send one byte to the cRIO:
             # 0x01: Right on
