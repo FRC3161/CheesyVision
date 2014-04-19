@@ -88,8 +88,8 @@ CAL_HEIGHT = int(0.0625 * WEBCAM_WIDTH_PX)
 CAL_WIDTH = CAL_HEIGHT
 
 # The location of the calibration rectangle.
-CAL_UL = (int(X_OFFSET + WEBCAM_WIDTH_PX/2 - CAL_WIDTH/2), WEBCAM_HEIGHT_PX)
-CAL_LR = (int(X_OFFSET + WEBCAM_WIDTH_PX/2 + CAL_WIDTH/2), WEBCAM_HEIGHT_PX + CAL_HEIGHT)
+CAL_UL = (int(X_OFFSET + WEBCAM_WIDTH_PX/2), int(WEBCAM_HEIGHT_PX/3))
+CAL_LR = (int(X_OFFSET + WEBCAM_WIDTH_PX/2 + CAL_WIDTH), int(WEBCAM_HEIGHT_PX/3 + CAL_HEIGHT))
 
 RECT_HEIGHT = int(WEBCAM_HEIGHT_PX / 6)
 RECT_WIDTH = RECT_HEIGHT 
@@ -196,7 +196,6 @@ def main():
     while 1:
         # Throttle the output
         cur_time = get_time_millis()
-        print(PERIOD/ 1000)
         if last_t + PERIOD > cur_time:
             time.sleep(PERIOD / 1000)
             continue
