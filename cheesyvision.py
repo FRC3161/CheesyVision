@@ -190,8 +190,9 @@ def main():
     while 1:
         # Throttle the output
         cur_time = get_time_millis()
+        print(PERIOD/ 1000)
         if last_t + PERIOD > cur_time:
-            time.sleep(0.0125)
+            time.sleep(PERIOD / 1000)
             continue
 
         # Get a new frame.
@@ -202,9 +203,6 @@ def main():
 
         # Render the image onto our canvas.
         bg = draw_static(small_img, connected)
-
-        # Show the image.
-        cv.imshow(WINDOW_NAME, bg)
 
         if connected:
             # Get the average color of each of the three boxes.
@@ -254,6 +252,9 @@ def main():
                 print "failed to reconnect"
                 last_t = cur_time + 1000
                 connected = False
+
+        # Show the image.
+        cv.imshow(WINDOW_NAME, bg)
 
         # Capture a keypress.
         key = cv.waitKey(10) & 255
